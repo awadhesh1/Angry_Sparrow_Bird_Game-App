@@ -1,86 +1,41 @@
+
 //
 //  ContentView.swift
 //  AngrySpparrowbird
 //
-//  Created by Awadhesh on 2026-02-22.
+//  Root view. Uses @Environment (not @EnvironmentObject) for @Observable GameViewModel.
 //
 
 import SwiftUI
-import CoreData
 
 struct ContentView: View {
-    @Environment(\.managedObjectContext) private var viewContext
-
-    @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Item.timestamp, ascending: true)],
-        animation: .default)
-    private var items: FetchedResults<Item>
+    @Environment(GameViewModel.self) var gameVM
 
     var body: some View {
-        NavigationView {
-            List {
-                ForEach(items) { item in
-                    NavigationLink {
-                        Text("Item at \(item.timestamp!, formatter: itemFormatter)")
-                    } label: {
-                        Text(item.timestamp!, formatter: itemFormatter)
-                    }
-                }
-                .onDelete(perform: deleteItems)
-            }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
-                }
-                ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
-                    }
-                }
-            }
-            Text("Select an item")
-        }
-    }
+        ZStack {
+            switch gameVM.currentScreen {
 
-    private func addItem() {
-        withAnimation {
-            let newItem = Item(context: viewContext)
-            newItem.timestamp = Date()
+            case .home:
+                HomeView()
+                    .transition(.opacity)
 
-            do {
-                try viewContext.save()
-            } catch {
-                // Replace this implementation with code to handle the error appropriately.
-                // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
-                let nsError = error as NSError
-                fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
+            case .stageSelect:
+                StageSelectView()
+                    .transition(.move(edge: .trailing).combined(with: .opacity))
+
+            case .stage1:
+                GameplayView(stage: .stage1)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+
+            case .stage2:
+                GameplayView(stage: .stage2)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+
+            case let .result(stage, success, score, bonus):
+                ResultView(stage: stage, success: success, score: score, bonus: bonus)
+                    .transition(.scale.combined(with: .opacity))
             }
         }
+        .animation(.easeInOut(duration: 0.35), value: gameVM.currentScreen)
     }
-
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            offsets.map { items[$0] }.forEach(viewContext.delete)
-
-            do {
-                try viewContext.save()
-            } catch {
-                // Replace this implementation with code to handle the error appropriately.
-                // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
-                let nsError = error as NSError
-                fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
-            }
-        }
-    }
-}
-
-private let itemFormatter: DateFormatter = {
-    let formatter = DateFormatter()
-    formatter.dateStyle = .short
-    formatter.timeStyle = .medium
-    return formatter
-}()
-
-#Preview {
-    ContentView().environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
 }

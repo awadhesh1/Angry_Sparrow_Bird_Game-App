@@ -1,21 +1,23 @@
+
 //
 //  AngrySpparrowbirdApp.swift
 //  AngrySpparrowbird
 //
-//  Created by Awadhesh on 2026-02-22.
+//  App entry point. Uses @State (not @StateObject) since GameViewModel is now
+//  @Observable. Injects via .environment() (not .environmentObject()).
 //
 
 import SwiftUI
-import CoreData
 
 @main
 struct AngrySpparrowbirdApp: App {
-    let persistenceController = PersistenceController.shared
+    /// @Observable classes are owned by @State, not @StateObject.
+    @State private var gameViewModel = GameViewModel()
 
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .environment(\.managedObjectContext, persistenceController.container.viewContext)
+                .environment(gameViewModel)  // .environment() for @Observable
         }
     }
 }
