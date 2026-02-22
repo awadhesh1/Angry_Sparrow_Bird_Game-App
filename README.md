@@ -3,6 +3,10 @@
 <p align="center">
   <img src="homeS.png" width="320">
 </p>
+<p align="center">
+  <img src="Lebel1.png" width="260">
+  <img src="playing_S.png" width="260">
+</p>
 ---
 
 ## 🎮 About Game
